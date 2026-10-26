@@ -1,0 +1,106 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  background-color: #0B0B0F;
+  color: #F4F4F8;
+  font-family: 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* desktop frame: center a mobile-width app */
+.app-frame {
+  max-width: 430px;
+  margin: 0 auto;
+  min-height: 100vh;
+  position: relative;
+  background: #0B0B0F;
+}
+
+@layer components {
+  .card {
+    @apply rounded-2xl border border-edge bg-surface;
+  }
+  .card-2 {
+    @apply rounded-2xl border border-edge bg-surface2;
+  }
+  .card-pad {
+    @apply p-4;
+  }
+  .neon-divider {
+    @apply h-px w-full bg-edge;
+  }
+  .chip {
+    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold;
+  }
+  /* primary gradient button — full width, 56px tall */
+  .btn-primary {
+    @apply flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-neon-purple to-neon-blue text-base font-bold text-white shadow-glow-blue transition-all active:scale-[0.97] disabled:opacity-50;
+  }
+  .btn-secondary {
+    @apply flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-edge2 bg-surface2 text-sm font-semibold text-white transition-all active:scale-[0.97];
+  }
+  .btn-ghost {
+    @apply flex items-center justify-center gap-2 rounded-2xl border border-edge2 bg-transparent px-4 py-2.5 text-sm font-semibold text-white/80 transition-all active:scale-[0.97] hover:bg-surface2;
+  }
+  .input {
+    @apply w-full rounded-2xl border border-edge bg-surface px-4 py-3.5 text-sm text-white placeholder-white/30 outline-none transition focus:border-neon-purple/70 focus:ring-2 focus:ring-neon-purple/25;
+  }
+  .label {
+    @apply mb-1.5 block text-xs font-semibold uppercase tracking-wider text-white/40;
+  }
+  .heading-xl {
+    @apply font-display text-2xl font-extrabold leading-tight text-white;
+  }
+  .heading-lg {
+    @apply font-display text-xl font-bold leading-tight text-white;
+  }
+  .heading-md {
+    @apply font-display text-base font-bold text-white;
+  }
+  .muted {
+    @apply text-sm text-white/45;
+  }
+  .muted-sm {
+    @apply text-xs text-white/40;
+  }
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: rgba(36, 36, 46, 0.9);
+  border-radius: 9999px;
+}
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* skeleton shimmer */
+.skeleton {
+  background: linear-gradient(90deg, #16161D 25%, #24242E 50%, #16161D 75%);
+  background-size: 200% 100%;
+  animation: shimmer 2s linear infinite;
+}
