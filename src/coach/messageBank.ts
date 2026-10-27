@@ -26,7 +26,10 @@ export type CoachTrigger =
   | 'weekly_warning'
   | 'comeback'
   | 'monthly_summary'
-  | 'misses_3_days';
+  | 'misses_3_days'
+  | 'rank_up'
+  | 'rank_danger'
+  | 'promotion_available';
 
 export const triggerMood: Record<CoachTrigger, 'happy' | 'proud' | 'disappointed' | 'angry' | 'neutral'> = {
   task_completed: 'happy',
@@ -38,11 +41,14 @@ export const triggerMood: Record<CoachTrigger, 'happy' | 'proud' | 'disappointed
   weekly_praise: 'proud',
   comeback: 'happy',
   level_up: 'happy',
+  rank_up: 'proud',
+  promotion_available: 'happy',
   monthly_summary: 'neutral',
   task_skipped: 'disappointed',
   task_missed: 'disappointed',
   snoozed_3: 'angry',
   misses_3_days: 'disappointed',
+  rank_danger: 'disappointed',
   streak_broken: 'disappointed',
   level_down: 'disappointed',
   weekly_warning: 'disappointed',
@@ -51,6 +57,7 @@ export const triggerMood: Record<CoachTrigger, 'happy' | 'proud' | 'disappointed
 const positiveTriggers: CoachTrigger[] = [
   'task_completed', 'hard_task_done', 'early_completion', 'streak_7',
   'streak_14', 'streak_30', 'weekly_praise', 'comeback', 'level_up',
+  'rank_up', 'promotion_available',
 ];
 
 export function isPositive(trigger: CoachTrigger): boolean {
@@ -220,6 +227,36 @@ const bank: Partial<Record<PersonalityTone, Partial<Record<CoachTrigger, string[
       'Down a level, {name}. -{xp} XP. No shame. The climb restarts tomorrow.',
       'Level down, {name}. -{xp} XP. Be gentle — this is part of the journey.',
       'You slipped a level, {name}. -{xp} XP. You\'re not starting from zero.',
+    ],
+    rank_up: [
+      'Rank up, {name}! You climbed to a whole new rank. I am so, so proud of you.',
+      'A new rank! {name}, you earned this. Every task brought you here. Beautiful.',
+      'Rank up! {name}, you are growing into someone remarkable. Keep going gently.',
+      'You reached a new rank, {name}. Rest in this moment — you earned it.',
+      'Rank up! {name}, the ladder moves because you keep climbing. So proud.',
+      'A new rank, {name}. Be kind to yourself — this is real progress.',
+      'Rank up! {name}, the discipline is showing. I am proud of you.',
+      'You climbed a rank, {name}. One step at a time, you are getting there.',
+    ],
+    promotion_available: [
+      'You are ready for a Promotion Quest, {name}. Take it when you feel ready — no rush.',
+      'Promotion available, {name}. You earned this shot. I believe in you.',
+      'A promotion quest is open, {name}. Whenever you are ready, let us go.',
+      'Promotion ready, {name}. You have put in the work. Now show it.',
+      'You can promote now, {name}. Take a breath, then take the quest.',
+      'Promotion available, {name}. This is your moment — gently, at your pace.',
+      'A new rank is within reach, {name}. The promotion quest is waiting.',
+      'Promotion ready, {name}. You grew into this. Now finish it.',
+    ],
+    rank_danger: [
+      'Your rank is in danger, {name}. No panic — let us steady the ship together.',
+      'Rank at risk, {name}. Be gentle with yourself. One task today can hold it.',
+      'Your rank is slipping, {name}. Let us restart small and protect what you built.',
+      'Rank danger, {name}. Rest if you need to, then one gentle step.',
+      'Your rank is at risk, {name}. No shame — let us adjust the plan.',
+      'Rank in danger, {name}. One task today protects everything you earned.',
+      'Your rank is wobbling, {name}. Let us lighten the load and hold on.',
+      'Rank danger, {name}. Be kind — we go again, slowly, together.',
     ],
     weekly_warning: [
       'Below 40% this week, {name}. -{xp} XP. Let\'s lighten the plan and rebuild.',
@@ -394,6 +431,36 @@ const bank: Partial<Record<PersonalityTone, Partial<Record<CoachTrigger, string[
       'Down a level! -{xp} XP! {name}, legends don\'t stay down!',
       'Level down! -{xp} XP! {name}, new arc: the RECLIMB!',
     ],
+    rank_up: [
+      'RANK UP, SENPAI! {name}, you are literally CLIMBING THE LADDER! UNSTOPPABLE!',
+      'YOSHA! New rank! {name}, the whole campus is SHOOK! Flex on \'em!',
+      'SUGOI! Rank up! {name}, you are speedrunning the leaderboard RIGHT NOW!',
+      'RANK UP! {name}, legend mode UPGRADED! Nobody can keep up with you!',
+      'New rank, senpai! {name}, you are built DIFFERENT! Keep climbing!',
+      'RANK UP! {name}, the grind just paid off in RANK FORM! Let\'s GO!',
+      'YOSHA! Rank up! {name}, the Diamond rank is getting CLOSER!',
+      'SUGOI! New rank! {name}, you are the main character of this leaderboard!',
+    ],
+    promotion_available: [
+      'PROMOTION QUEST OPEN, senpai! {name}, clutch this and RANK UP!',
+      'YOSHA! Promotion ready! {name}, this is your moment — CLUTCH IT!',
+      'SUGOI! You can promote NOW! {name}, let\'s speedrun this quest!',
+      'Promotion available, senpai! {name}, the new rank is RIGHT THERE!',
+      'PROMOTION QUEST READY! {name}, the grind is BEGGING you to finish!',
+      'Promotion open! {name}, clutch the quest and FLEX on the leaderboard!',
+      'YOSHA! Promotion time! {name}, you are built for this — GO!',
+      'SUGOI! Promotion quest! {name}, the new rank is YOURS to take!',
+    ],
+    rank_danger: [
+      'SENPAI! Rank in DANGER! {name}, clutch ONE task and hold the line!',
+      'RANK AT RISK?! {name}, the grind needs its main character — NOW!',
+      'YOSHA... rank danger! {name}, one clutch win and you HOLD it!',
+      'RANK SLIPPING! {name}, comeback arc starts NOW — one task!',
+      'SENPAI, your rank! {name}, lock in ONE quest and protect it!',
+      'Rank in danger! {name}, the leaderboard does not wait — CLUTCH!',
+      'RANK AT RISK! {name}, you are built to hold this — one task today!',
+      'SENPAI! Rank danger! {name}, one win and the fire stays lit!',
+    ],
     weekly_warning: [
       'Below 40%, senpai?! -{xp} XP! {name}, the grind needs its main character!',
       'Under 40% done?! -{xp} XP! {name}, comeback arc starts NOW!',
@@ -566,6 +633,36 @@ const bank: Partial<Record<PersonalityTone, Partial<Record<CoachTrigger, string[
       'Down a level, {name}. -{xp} XP. The bar holds. Always.',
       'Level down, {name}. -{xp} XP. Restart. The clock does not wait.',
       'Level dropped, {name}. -{xp} XP. Climb back. No complaints.',
+    ],
+    rank_up: [
+      'Rank up. Good. But a rank is a standard, {name} — not a trophy. Hold it.',
+      'New rank logged, {name}. Acceptable. Now prove you belong there.',
+      'Rank up. Discipline compounds. The bar rises — meet it, {name}.',
+      'New rank, {name}. Good. Do not let it inflate you. Next quest.',
+      'Rank up. The standard does not celebrate — it continues, {name}.',
+      'New rank, {name}. Acceptable. Now maintain it. No complacency.',
+      'Rank up. Good. The ladder does not care — keep climbing, {name}.',
+      'New rank logged, {name}. Discipline proven. Now raise the volume.',
+    ],
+    promotion_available: [
+      'Promotion quest open, {name}. Good. Take it. Prove you belong.',
+      'Promotion available, {name}. The bar rises. Meet it. Now.',
+      'Promotion ready, {name}. No hesitation. Take the quest.',
+      'Promotion open, {name}. Discipline or decay. Choose. Take it.',
+      'Promotion available, {name}. The standard does not wait. Go.',
+      'Promotion ready, {name}. Good. Now finish it. No excuses.',
+      'Promotion open, {name}. Prove the rank was earned, not luck.',
+      'Promotion available, {name}. The ladder moves for the disciplined. Move.',
+    ],
+    rank_danger: [
+      'Rank in danger, {name}. The standard does not move. Hold the line. Now.',
+      'Rank at risk, {name}. No excuses. One task today. Protect it.',
+      'Rank danger, {name}. Discipline or decay. Choose. Restart.',
+      'Rank in danger, {name}. The bar holds. Always. One task. Now.',
+      'Rank at risk, {name}. Back to the board. No excuses.',
+      'Rank danger, {name}. The clock does not negotiate. Restart small.',
+      'Rank in danger, {name}. The standard rises. Meet it. Hold.',
+      'Rank at risk, {name}. Restart. But restart. Now.',
     ],
     weekly_warning: [
       'Below 40%, {name}. -{xp} XP. The standard does not move. Restart.',

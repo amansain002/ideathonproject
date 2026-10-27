@@ -86,9 +86,11 @@ export function generateCoachMessage(
     {
       task_completed: 'happy', hard_task_done: 'proud', early_completion: 'proud',
       streak_7: 'proud', streak_14: 'proud', streak_30: 'proud', weekly_praise: 'proud',
-      comeback: 'happy', level_up: 'happy', monthly_summary: 'neutral',
+      comeback: 'happy', level_up: 'happy', rank_up: 'proud', promotion_available: 'happy',
+      monthly_summary: 'neutral',
       task_skipped: 'disappointed', task_missed: 'disappointed', snoozed_3: 'angry',
-      misses_3_days: 'disappointed', streak_broken: 'disappointed', level_down: 'disappointed',
+      misses_3_days: 'disappointed', rank_danger: 'disappointed',
+      streak_broken: 'disappointed', level_down: 'disappointed',
       weekly_warning: 'disappointed',
     } as const
   )[trigger]];
