@@ -364,7 +364,7 @@ export const tipLines: Record<PersonalityTone, string[]> = {
   strict: [
     'Instagram is still locked. Finish a quest before you even think about it.',
     'Your Wealth ring is at risk. Skip the snack. Log the budget. Move.',
-    'Complacency is the enemy of rank. Open SkillQuest and study now.',
+    'Complacency is the enemy of rank. Open UpLevel and study now.',
   ],
   calm: [
     'A small step today is enough. There is no rush — just a gentle next move.',

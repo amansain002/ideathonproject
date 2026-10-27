@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import {
   Flame, Zap, Coins, Check, Sparkles, ChevronRight, Plus, Pencil, Trash2, X,
-  Wrench, Users, BookOpen, CalendarDays,
+  Wrench, Users, BookOpen, CalendarDays, Clock, SkipForward,
 } from 'lucide-react';
 import * as Icons from 'lucide-react';
 import { useGame } from '@/context/GameContext';
@@ -17,6 +17,7 @@ export function HomeTab({ onNavigate }: { onNavigate: (t: TabId) => void }) {
   const {
     level, xp, xpToNext, coins, streak, rankName, quests, toggleQuest, floats,
     tasks, toggleTask, addTask, updateTask, deleteTask, skills, userType,
+    skipTask, snoozeTask,
   } = useGame();
   const [showAdd, setShowAdd] = useState(false);
   const [editTask, setEditTask] = useState<Task | null>(null);
@@ -35,7 +36,7 @@ export function HomeTab({ onNavigate }: { onNavigate: (t: TabId) => void }) {
       <div className="flex items-start justify-between">
         <div>
           <p className="muted-sm">Good morning, Scholar</p>
-          <h1 className="heading-xl">Let's lock in.</h1>
+          <h1 className="heading-xl">UpLevel time.</h1>
         </div>
         <div className="flex items-center gap-1.5 rounded-2xl border border-neon-amber/40 bg-neon-amber/10 px-3 py-2">
           <Flame size={18} className="text-neon-amber" />
@@ -128,6 +129,12 @@ export function HomeTab({ onNavigate }: { onNavigate: (t: TabId) => void }) {
                       <span>· {t.time} · {t.duration}m · +{xpVal} XP</span>
                     </span>
                   </span>
+                  {!t.done && (
+                    <button onClick={() => snoozeTask(t.id)} className="text-white/30 transition hover:text-neon-sky" aria-label="snooze"><Clock size={14} /></button>
+                  )}
+                  {!t.done && (
+                    <button onClick={() => skipTask(t.id)} className="text-white/30 transition hover:text-neon-amber" aria-label="skip"><SkipForward size={14} /></button>
+                  )}
                   <button onClick={() => setEditTask(t)} className="text-white/30 transition hover:text-white/70"><Pencil size={14} /></button>
                   <button onClick={() => deleteTask(t.id)} className="text-white/30 transition hover:text-neon-crimson"><Trash2 size={14} /></button>
                 </div>

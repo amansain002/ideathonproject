@@ -15,7 +15,7 @@ export function FriendsTab() {
 
   function share() {
     if (navigator.share) {
-      navigator.share({ title: 'SkillQuest: Lock-In OS', text: `Join me on SkillQuest! Use my invite code: ${inviteCode}` }).catch(() => {});
+      navigator.share({ title: 'UpLevel — Learn. Earn. Grow.', text: `Join me on UpLevel! Use my invite code: ${inviteCode}` }).catch(() => {});
     } else {
       copy();
     }

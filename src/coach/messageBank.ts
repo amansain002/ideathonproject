@@ -58,7 +58,8 @@ export function isPositive(trigger: CoachTrigger): boolean {
 }
 
 // ---- core message banks per personality (supportive / hype / strict) ----
-const bank: Record<PersonalityTone, Partial<Record<CoachTrigger, string[]>>> = {
+// calm reuses the supportive bank; savage uses getSavageBank separately.
+const bank: Partial<Record<PersonalityTone, Partial<Record<CoachTrigger, string[]>>>> = {
   supportive: {
     task_completed: [
       'You did it, {name}! +{xp} XP. Every step counts toward the legend you\'re becoming.',
@@ -685,7 +686,7 @@ const recoveryBank: Record<PersonalityTone, string[]> = {
 
 export function getBank(trigger: CoachTrigger, personality: PersonalityTone): string[] {
   if (personality === 'calm') {
-    return bank.supportive[trigger] ?? [];
+    return bank.supportive?.[trigger] ?? [];
   }
   return bank[personality]?.[trigger] ?? [];
 }

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { GameProvider } from '@/context/GameContext';
 import { BottomNav } from '@/components/BottomNav';
 import { LevelUpOverlay, CompanionWidget } from '@/components/CompanionOverlay';
+import { CoachReactionOverlay } from '@/components/CoachReactionOverlay';
 import { Onboarding } from '@/Onboarding';
 import { HomeTab } from '@/tabs/HomeTab';
 import { ToolsTab } from '@/tabs/ToolsTab';
@@ -39,6 +40,7 @@ export default function App() {
         </main>
         <BottomNav active={tab} onChange={setTab} />
         <CompanionWidget />
+        <CoachReactionOverlay />
         <LevelUpOverlay />
       </div>
     </GameProvider>
