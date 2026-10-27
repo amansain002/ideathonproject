@@ -6,9 +6,14 @@ import {
   initialMuscleRanks,
   initialSetLogs,
   defaultCompanion,
+  defaultCoachSettings,
+  defaultCoachMemory,
   companionPresets,
   autoPlanTasks,
   generateResources,
+  difficultyXp,
+  todayShort,
+  daysOfWeek,
   type Quest,
   type Expense,
   type Subject,
@@ -22,7 +27,10 @@ import {
   type TimetableEntry,
   type Resource,
   type Difficulty,
+  type CoachSettings,
+  type CoachMemory,
 } from '@/types';
+import type { CoachTrigger } from '@/coach/messageBank';
 
 interface FloatReward {
   id: number;
@@ -47,6 +55,9 @@ interface GameState {
   funWalletUnlocked: boolean;
   screenTimeMinutes: number;
   companion: CompanionConfig;
+  coachSettings: CoachSettings;
+  coachMemory: CoachMemory;
+  coachEvent: { trigger: CoachTrigger; task?: string; xp?: number } | null;
   levelUpData: { open: boolean; newLevel: number; rankName: string } | null;
   userType: UserType;
   skills: string[];
@@ -79,6 +90,14 @@ interface GameState {
   bumpSubject: (name: string, amount: number) => void;
   setCompanion: (c: CompanionConfig) => void;
   setCompanionPreset: (id: CompanionId) => void;
+  setCoachSettings: (patch: Partial<CoachSettings>) => void;
+  setCoachMemory: (patch: Partial<CoachMemory>) => void;
+  triggerCoach: (trigger: CoachTrigger, task?: string, xp?: number) => void;
+  clearCoachEvent: () => void;
+  skipTask: (id: string) => void;
+  snoozeTask: (id: string) => void;
+  rescheduleTask: (id: string, day?: string, time?: string) => void;
+  markStruggling: () => void;
   triggerLevelUp: () => void;
   closeLevelUp: () => void;
 }
@@ -101,6 +120,8 @@ interface PersistedState {
   tasks: Task[];
   timetable: TimetableEntry[];
   completedResources: string[];
+  coachSettings: CoachSettings;
+  coachMemory: CoachMemory;
 }
 
 function loadPersisted(): Partial<PersistedState> {
@@ -137,9 +158,18 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const [funWalletUnlocked, setFunWalletUnlocked] = useState(false);
   const [screenTimeMinutes, setScreenTimeMinutes] = useState(0);
   const [companion, setCompanionState] = useState<CompanionConfig>(defaultCompanion);
+  const [coachSettings, setCoachSettingsState] = useState<CoachSettings>(defaultCoachSettings);
+  const [coachMemory, setCoachMemoryState] = useState<CoachMemory>(defaultCoachMemory);
+  const [coachEvent, setCoachEvent] = useState<{ trigger: CoachTrigger; task?: string; xp?: number } | null>(null);
   const [levelUpData, setLevelUpData] = useState<{ open: boolean; newLevel: number; rankName: string } | null>(null);
 
   const persisted = loadPersisted();
+  // hydrate coach settings/memory from persistence if present
+  useEffect(() => {
+    if (persisted.coachSettings) setCoachSettingsState({ ...defaultCoachSettings, ...persisted.coachSettings });
+    if (persisted.coachMemory) setCoachMemoryState({ ...defaultCoachMemory, ...persisted.coachMemory });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [userType, setUserType] = useState<UserType>(persisted.userType ?? 'college');
   const [skills, setSkills] = useState<string[]>(persisted.skills ?? ['Coding', 'Data Analysis']);
   const [tasks, setTasks] = useState<Task[]>(persisted.tasks ?? []);
@@ -153,6 +183,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       setLevelUpData({ open: true, newLevel, rankName: 'Diamond II' });
       return newLevel;
     });
+    setTimeout(() => setCoachEvent({ trigger: 'level_up' }), 600);
   }, []);
 
   function addXp(amount: number, coinAmount = 0) {
@@ -252,8 +283,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
   // ---- new feature methods ----
 
   useEffect(() => {
-    savePersisted({ userType, skills, tasks, timetable, completedResources });
-  }, [userType, skills, tasks, timetable, completedResources]);
+    savePersisted({ userType, skills, tasks, timetable, completedResources, coachSettings, coachMemory });
+  }, [userType, skills, tasks, timetable, completedResources, coachSettings, coachMemory]);
 
   useEffect(() => {
     setResources(generateResources(skills, level, userType));
@@ -291,16 +322,119 @@ export function GameProvider({ children }: { children: ReactNode }) {
   }
 
   function toggleTask(id: string) {
-    setTasks((prev) =>
-      prev.map((t) => {
+    setTasks((prev) => {
+      let completedTask: Task | null = null;
+      const next = prev.map((t) => {
         if (t.id !== id) return t;
         if (!t.done) {
-          const xpVal = t.difficulty === 'easy' ? 10 : t.difficulty === 'medium' ? 25 : 50;
+          completedTask = t;
+          const xpVal = difficultyXp[t.difficulty];
           addXp(xpVal, 5);
         }
         return { ...t, done: !t.done };
-      })
-    );
+      });
+      if (completedTask) {
+        const task = completedTask as Task;
+        const xpVal = difficultyXp[task.difficulty];
+        // Determine coach trigger
+        const trigger: CoachTrigger = task.difficulty === 'hard' ? 'hard_task_done' : 'task_completed';
+        // update memory: completion count
+        setCoachMemoryState((m) => ({
+          ...m,
+          totalCompletions: m.totalCompletions + 1,
+          missesInRow: 0,
+          favoriteTask: m.favoriteTask === null ? task.title : m.favoriteTask,
+        }));
+        // emit coach event (slight delay so float animation isn't interrupted)
+        setTimeout(() => setCoachEvent({ trigger, task: task.title, xp: xpVal }), 250);
+      }
+      return next;
+    });
+  }
+
+  function skipTask(id: string) {
+    const task = tasks.find((t) => t.id === id);
+    if (!task || task.done) return;
+    const xpVal = difficultyXp[task.difficulty];
+    const penalty = Math.round(xpVal / 2);
+    // deduct XP (penalty)
+    setXp((prev) => Math.max(0, prev - penalty));
+    const id2 = ++floatId;
+    setFloats((f) => [...f, { id: id2, xp: -penalty, coins: 0 }]);
+    setTimeout(() => setFloats((f) => f.filter((x) => x.id !== id2)), 1300);
+    setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, done: true } : t)));
+    setCoachMemoryState((m) => ({
+      ...m,
+      totalMisses: m.totalMisses + 1,
+      missesInRow: m.missesInRow + 1,
+    }));
+    setCoachEvent({ trigger: 'task_skipped', task: task.title, xp: penalty });
+  }
+
+  function snoozeTask(id: string) {
+    const task = tasks.find((t) => t.id === id);
+    if (!task) return;
+    // push time forward by 10 min (simple string increment)
+    const [h, m] = task.time.split(':').map(Number);
+    const d = new Date();
+    d.setHours(h, m, 0, 0);
+    d.setMinutes(d.getMinutes() + 10);
+    const newTime = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+    setTasks((prev) => prev.map((t) => {
+      if (t.id !== id) return t;
+      const snoozeCount = (t as Task & { snoozeCount?: number }).snoozeCount ?? 0;
+      const next = { ...t, time: newTime, snoozeCount: snoozeCount + 1 } as Task & { snoozeCount?: number };
+      if (next.snoozeCount && next.snoozeCount >= 3) {
+        const xpVal = difficultyXp[t.difficulty];
+        const penalty = Math.round(xpVal / 4);
+        setXp((prevXp) => Math.max(0, prevXp - penalty));
+        setCoachEvent({ trigger: 'snoozed_3', task: t.title, xp: penalty });
+      }
+      return next;
+    }));
+  }
+
+  function rescheduleTask(id: string, day?: string, time?: string) {
+    setTasks((prev) => prev.map((t) =>
+      t.id === id ? { ...t, day: day ?? t.day, time: time ?? t.time, done: false } : t
+    ));
+  }
+
+  function markStruggling() {
+    setCoachSettingsState((s) => ({ ...s, strugglingUntil: Date.now() + 24 * 60 * 60 * 1000 }));
+    // also lighten: reduce today's incomplete tasks to just 1
+    const today = todayShort();
+    setTasks((prev) => {
+      const todays = prev.filter((t) => (t.day === today || t.day === 'Today') && !t.done);
+      if (todays.length <= 1) return prev;
+      const keepId = todays[0].id;
+      return prev.map((t) => {
+        if ((t.day === today || t.day === 'Today') && !t.done && t.id !== keepId) {
+          // push to tomorrow
+          const idx = daysOfWeek.indexOf(t.day);
+          const nextDay = daysOfWeek[(idx + 1) % 7];
+          return { ...t, day: nextDay };
+        }
+        return t;
+      });
+    });
+    setCoachEvent({ trigger: 'misses_3_days' });
+  }
+
+  function setCoachSettings(patch: Partial<CoachSettings>) {
+    setCoachSettingsState((prev) => ({ ...prev, ...patch }));
+  }
+
+  function setCoachMemory(patch: Partial<CoachMemory>) {
+    setCoachMemoryState((prev) => ({ ...prev, ...patch }));
+  }
+
+  function triggerCoach(trigger: CoachTrigger, task?: string, xp?: number) {
+    setCoachEvent({ trigger, task, xp });
+  }
+
+  function clearCoachEvent() {
+    setCoachEvent(null);
   }
 
   function autoPlanWeek() {
@@ -348,6 +482,9 @@ export function GameProvider({ children }: { children: ReactNode }) {
       funWalletUnlocked,
       screenTimeMinutes,
       companion,
+      coachSettings,
+      coachMemory,
+      coachEvent,
       levelUpData,
       userType,
       skills,
@@ -380,10 +517,18 @@ export function GameProvider({ children }: { children: ReactNode }) {
       bumpSubject,
       setCompanion,
       setCompanionPreset,
+      setCoachSettings,
+      setCoachMemory,
+      triggerCoach,
+      clearCoachEvent,
+      skipTask,
+      snoozeTask,
+      rescheduleTask,
+      markStruggling,
       triggerLevelUp,
       closeLevelUp,
     }),
-    [level, xp, xpToNext, coins, streak, focusMode, quests, expenses, subjects, muscleRanks, setLogs, floats, funWalletUnlocked, screenTimeMinutes, companion, levelUpData, userType, skills, tasks, timetable, resources, completedResources]
+    [level, xp, xpToNext, coins, streak, focusMode, quests, expenses, subjects, muscleRanks, setLogs, floats, funWalletUnlocked, screenTimeMinutes, companion, coachSettings, coachMemory, coachEvent, levelUpData, userType, skills, tasks, timetable, resources, completedResources]
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

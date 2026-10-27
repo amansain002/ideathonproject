@@ -31,13 +31,41 @@ export type ToolPage =
   | 'scanner-desk';
 
 export type CompanionId = 'sylphie' | 'aiko' | 'kaelen' | 'ignis' | 'nova';
-export type PersonalityTone = 'supportive' | 'hype' | 'strict';
+export type PersonalityTone = 'supportive' | 'hype' | 'strict' | 'calm' | 'savage';
 
 export interface CompanionConfig {
   id: CompanionId;
   customName: string;
   glowColor: string;
   personality: PersonalityTone;
+}
+
+// ---- Coach reaction system ----
+
+export type CoachIntensity = 'gentle' | 'balanced' | 'tough' | 'savage';
+export type CoachLanguage = 'en' | 'hi' | 'hinglish';
+
+export interface CoachSettings {
+  intensity: CoachIntensity;
+  praiseOnly: boolean;
+  voiceEnabled: boolean;
+  voiceVolume: number; // 0-1
+  voiceURI: string | null;
+  quietHoursStart: string | null; // '22:00'
+  quietHoursEnd: string | null; // '07:00'
+  reminders: boolean;
+  language: CoachLanguage;
+  strugglingUntil: number | null; // timestamp until which harsh messages are muted
+}
+
+export interface CoachMemory {
+  missesInRow: number;
+  bestStreak: number;
+  weakDay: string | null; // weekday where user most often misses
+  favoriteTask: string | null;
+  totalMisses: number;
+  totalCompletions: number;
+  lastTriggerKey: string | null;
 }
 
 export interface CompanionPreset {
@@ -255,6 +283,44 @@ export const defaultCompanion: CompanionConfig = {
   personality: 'supportive',
 };
 
+export const defaultCoachSettings: CoachSettings = {
+  intensity: 'balanced',
+  praiseOnly: false,
+  voiceEnabled: true,
+  voiceVolume: 0.8,
+  voiceURI: null,
+  quietHoursStart: '22:00',
+  quietHoursEnd: '07:00',
+  reminders: true,
+  language: 'en',
+  strugglingUntil: null,
+};
+
+export const defaultCoachMemory: CoachMemory = {
+  missesInRow: 0,
+  bestStreak: 0,
+  weakDay: null,
+  favoriteTask: null,
+  totalMisses: 0,
+  totalCompletions: 0,
+  lastTriggerKey: null,
+};
+
+export const personalityLabels: Record<PersonalityTone, { label: string; desc: string }> = {
+  supportive: { label: 'Friendly', desc: 'Gentle, encouraging' },
+  hype: { label: 'Funny Buddy', desc: 'High-energy hype lines' },
+  strict: { label: 'Strict Mentor', desc: 'No excuses, disciplined' },
+  calm: { label: 'Calm Guide', desc: 'Soft, steady, patient' },
+  savage: { label: 'Savage Roast', desc: 'Playful roasts (opt-in)' },
+};
+
+export const intensityLabels: Record<CoachIntensity, { label: string; desc: string }> = {
+  gentle: { label: 'Gentle', desc: 'Soft support only' },
+  balanced: { label: 'Balanced', desc: 'Mix of hype and honesty' },
+  tough: { label: 'Tough Love', desc: 'Firm, no-nonsense' },
+  savage: { label: 'Savage Roast', desc: 'Playful roasts (opt-in)' },
+};
+
 // Level-up dialogue lines per personality
 export const levelUpLines: Record<PersonalityTone, string[]> = {
   supportive: [
@@ -271,6 +337,16 @@ export const levelUpLines: Record<PersonalityTone, string[]> = {
     'Good. But one level is not a victory — it is a minimum. Back to the quest board.',
     'Acceptable. Do not let it inflate you. Discipline compounds; laziness compounds faster.',
     'Level logged. Now prove it was not luck. Next quest. No excuses.',
+  ],
+  calm: [
+    'A new level, gently earned. Take a breath — the next step will wait for you.',
+    'You climbed again. No rush, no pressure. Just steady progress, one breath at a time.',
+    'Level up. Notice how far consistency has carried you. Rest, then continue.',
+  ],
+  savage: [
+    'Level up. The rank finally caught up to your potential — try not to waste it.',
+    'New level. The leaderboard stopped laughing. Keep it that way.',
+    'Level up. Somewhere, your procrastination habit is filing for unemployment.',
   ],
 };
 
@@ -289,6 +365,16 @@ export const tipLines: Record<PersonalityTone, string[]> = {
     'Instagram is still locked. Finish a quest before you even think about it.',
     'Your Wealth ring is at risk. Skip the snack. Log the budget. Move.',
     'Complacency is the enemy of rank. Open SkillQuest and study now.',
+  ],
+  calm: [
+    'A small step today is enough. There is no rush — just a gentle next move.',
+    'Breathe. The plan will wait for you. One task, done calmly, is plenty.',
+    'Hydrate and pause. Steady rhythm beats frantic effort every time.',
+  ],
+  savage: [
+    'The to-do list is side-eyeing you. Maybe give it some attention today.',
+    'Your streak is one skipped task from writing its will. Just saying.',
+    'The Diamond rank does not wait for "later." Clock\'s ticking.',
   ],
 };
 
